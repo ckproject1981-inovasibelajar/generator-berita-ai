@@ -6,18 +6,40 @@ import io
 # Konfigurasi Halaman
 st.set_page_config(page_title="AI News Generator", layout="centered")
 
-st.title("📰 i-Humas Disruptive Learning Innovation (DLI) UM Ver 1.0 ")
+# --- CSS UNTUK CLEAN LOOK (Menghilangkan Branding & Fullscreen) ---
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            .stDeployButton {display:none;}
+            button[title="View fullscreen"] {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# --- CSS UNTUK JUDUL LEBIH KECIL ---
+st.markdown("""
+    <style>
+    .compact-title {
+        font-size: 18px !important;
+        font-weight: bold;
+        margin-top: -50px !important;
+        margin-bottom: 20px !important;
+        line-height: 1.2;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+st.markdown('<div class="compact-title">📰 i-Humas PUI-PT Disruptive Learning Innovation (DLI) UM Ver 1.0</div>', unsafe_allow_html=True)
 
 # --- LOGIKA API KEY OTOMATIS ---
-# Mencoba mengambil dari Streamlit Secrets, jika kosong baru minta input manual
 if "GOOGLE_API_KEY" in st.secrets:
     api_key = st.secrets["GOOGLE_API_KEY"]
 else:
-    # Sidebar hanya muncul jika tidak ada secret (untuk pengembangan lokal)
     api_key = st.sidebar.text_input("Masukkan Kode Password (API Key)", type="password")
 
 # --- KONFIGURASI GENAI ---
-# Kita harus memastikan api_key terisi sebelum memanggil genai.configure
 if api_key:
     genai.configure(api_key=api_key)
 else:
@@ -50,7 +72,6 @@ if submit:
         st.error("API Key belum tersedia!")
     else:
         try:
-            # Detektif Model: Mencari model yang mendukung generateContent
             available_models = [m for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
             
             if not available_models:
