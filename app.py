@@ -6,11 +6,22 @@ import io
 # Konfigurasi Halaman
 st.set_page_config(page_title="AI News Generator", layout="centered")
 
-# Sidebar untuk API Key
-st.sidebar.title("Pengaturan")
-api_key = st.sidebar.text_input("Masukkan Kode Password yang Telah Diberikan", type="password")
-
 st.title("📰 i-Humas")
+
+# --- LOGIKA API KEY OTOMATIS ---
+# Mencoba mengambil dari Streamlit Secrets, jika kosong baru minta input manual
+if "GOOGLE_API_KEY" in st.secrets:
+    api_key = st.secrets["GOOGLE_API_KEY"]
+else:
+    # Sidebar hanya muncul jika tidak ada secret (untuk pengembangan lokal)
+    api_key = st.sidebar.text_input("Masukkan Kode Password (API Key)", type="password")
+
+# --- KONFIGURASI GENAI ---
+# Kita harus memastikan api_key terisi sebelum memanggil genai.configure
+if api_key:
+    genai.configure(api_key=api_key)
+else:
+    st.warning("Silakan masukkan API Key di sidebar untuk memulai.")
 
 # Form Input
 with st.form("news_form"):
@@ -36,11 +47,9 @@ def create_docx(text):
 # Proses Generate
 if submit:
     if not api_key:
-        st.error("API Key belum diisi!")
+        st.error("API Key belum tersedia!")
     else:
         try:
-            genai.configure(api_key=api_key)
-            
             # Detektif Model: Mencari model yang mendukung generateContent
             available_models = [m for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
             
@@ -48,10 +57,9 @@ if submit:
                 st.error("Tidak ditemukan model yang mendukung generateContent!")
             else:
                 model_name = available_models[0].name
-                st.write(f"Menggunakan model: {model_name}")
                 model = genai.GenerativeModel(model_name)
                 
-                prompt = f"Tuliskan berita dengan judul {judul}, detail: {rincian}."
+                prompt = f"Anda adalah jurnalis. Tulis berita dengan judul: {judul}, Lokasi: {tempat}, Waktu: {waktu}, Narasumber: {narasumber}, Gaya: {gaya}. Detail: {rincian}. Kata Kunci: {kata_kunci}."
                 
                 with st.spinner("Sedang menyusun berita..."):
                     response = model.generate_content(prompt)
