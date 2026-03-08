@@ -6,7 +6,7 @@ import io
 # Konfigurasi Halaman
 st.set_page_config(page_title="AI News Generator", layout="centered")
 
-st.title("### 📰 Selamat Datang di i-Humas PUI-PT Disruptive Learning Innovation (DLI) Universitas Negeri Malang Ver 1.0 ")
+st.title("📰 i-Humas Disruptive Learning Innovation (DLI) UM Ver 1.0 ")
 
 # --- LOGIKA API KEY OTOMATIS ---
 # Mencoba mengambil dari Streamlit Secrets, jika kosong baru minta input manual
