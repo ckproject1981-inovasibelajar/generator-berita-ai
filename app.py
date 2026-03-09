@@ -34,7 +34,6 @@ hide_streamlit_style = """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # --- LOGO & JUDUL ---
-# Menampilkan logo dengan lebar 200px dan rata tengah
 col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
 with col_logo2:
     st.image("https://i.ibb.co.com/23N3kpBY/Logo-DLI.png", width=200)
@@ -63,7 +62,6 @@ with st.form("news_form"):
     kata_kunci = st.text_input("Kata Kunci (pisahkan dengan koma)")
     submit = st.form_submit_button("Generate Berita Profesional")
 
-# Fungsi untuk membuat file Word
 def create_docx(text):
     doc = Document()
     doc.add_heading('Hasil Berita AI', 0)
@@ -78,36 +76,42 @@ if submit:
         st.error("API Key belum diisi!")
     else:
         try:
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            
-            # --- SARAN JUDUL ALTERNATIF ---
-            saran_prompt = f"Berikan 3 saran judul berita yang menarik, profesional, dan SEO-friendly berdasarkan detail kegiatan ini: {rincian}. Berikan hanya judulnya saja."
-            saran_response = model.generate_content(saran_prompt)
-            st.info(f"💡 **Saran Judul Alternatif:**\n{saran_response.text}")
-
-            # --- GENERATE BERITA 5W+1H ---
-            prompt = f"""
-            Anda adalah jurnalis senior i-Humas PUI-PT DLI UM. Tulis berita profesional berdasarkan:
-            - Judul Draft: {judul_awal}
-            - Lokasi: {tempat}
-            - Waktu: {waktu}
-            - Narasumber: {narasumber}
-            - Rincian: {rincian}
-            - Gaya: {gaya}
-            
-            INSTRUKSI: Terapkan 5W+1H, struktur berita piramida terbalik, bahasa objektif, dan informatif.
-            """
-            
-            with st.spinner("Jurnalis AI sedang menulis berita..."):
-                response = model.generate_content(prompt)
-                berita_teks = response.text
-                st.markdown("### Hasil Berita Final:")
-                st.write(berita_teks)
+            # --- DETEKSI OTOMATIS MODEL YANG TERSEDIA ---
+            models = [m for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            if not models:
+                st.error("Tidak ada model yang tersedia untuk generateContent.")
+            else:
+                # Menggunakan model pertama yang tersedia di akun Anda
+                model = genai.GenerativeModel(models[0].name)
                 
-                doc_buffer = create_docx(berita_teks)
-                st.download_button("📥 Download Berita (.docx)", doc_buffer, "berita_dli_um.docx")
+                # --- SARAN JUDUL ALTERNATIF ---
+                saran_prompt = f"Berikan 3 saran judul berita yang menarik dan profesional berdasarkan detail kegiatan ini: {rincian}. Berikan hanya judulnya saja."
+                saran_response = model.generate_content(saran_prompt)
+                st.info(f"💡 **Saran Judul Alternatif:**\n{saran_response.text}")
+
+                # --- GENERATE BERITA 5W+1H ---
+                prompt = f"""
+                Anda adalah jurnalis senior i-Humas PUI-PT DLI UM. Tulis berita profesional berdasarkan:
+                - Judul Draft: {judul_awal}
+                - Lokasi: {tempat}
+                - Waktu: {waktu}
+                - Narasumber: {narasumber}
+                - Rincian: {rincian}
+                - Gaya: {gaya}
+                
+                INSTRUKSI: Terapkan 5W+1H, struktur berita piramida terbalik, bahasa objektif, dan informatif.
+                """
+                
+                with st.spinner("Jurnalis AI sedang menulis berita..."):
+                    response = model.generate_content(prompt)
+                    berita_teks = response.text
+                    st.markdown("### Hasil Berita Final:")
+                    st.write(berita_teks)
+                    
+                    doc_buffer = create_docx(berita_teks)
+                    st.download_button("📥 Download Berita (.docx)", doc_buffer, "berita_dli_um.docx")
         except Exception as e:
-            st.error(f"Terjadi kesalahan: {e}")
+            st.error(f"Terjadi kesalahan koneksi model: {e}")
 
 # --- FOOTER KUSTOM ---
 st.markdown('<div class="custom-footer">Dikembangkan oleh Citra Kurniawan & PUI DLI - 2026</div>', unsafe_allow_html=True)
