@@ -4,57 +4,45 @@ from docx import Document
 import io
 
 # Konfigurasi Halaman
-st.set_page_config(page_title="AI News Generator", layout="centered")
+st.set_page_config(page_title="i-Humas DLI", layout="centered")
 
-# --- CSS UNTUK CLEAN LOOK (Menghilangkan Branding & Fullscreen) ---
+# --- CSS AGRESIF UNTUK CLEAN LOOK ---
 hide_streamlit_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            .stDeployButton {display:none;}
-            button[title="View fullscreen"] {visibility: hidden;}
-            header {visibility: hidden;}
-            </style>
-            """
+    <style>
+    #MainMenu {visibility: hidden !important;}
+    footer {visibility: hidden !important;}
+    .stDeployButton {display:none !important;}
+    header {visibility: hidden !important;}
+    button[title="View fullscreen"] {visibility: hidden !important;}
+    .stAppDeployButton {display:none !important;}
+    </style>
+"""
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# --- CSS UNTUK JUDUL LEBIH KECIL ---
+# Judul dengan style
 st.markdown("""
-    <style>
-    .compact-title {
-        font-size: 18px !important;
-        font-weight: bold;
-        margin-top: -50px !important;
-        margin-bottom: 20px !important;
-        line-height: 1.2;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    <h2 style="font-size: 20px; text-align: center;">📰 i-Humas PUI-PT DLI UM Ver 1.0</h2>
+""", unsafe_allow_html=True)
 
-st.markdown('<div class="compact-title">📰 i-Humas PUI-PT Disruptive Learning Innovation (DLI) UM Ver 1.0</div>', unsafe_allow_html=True)
-
-# --- LOGIKA API KEY OTOMATIS ---
+# Logika API Key
 if "GOOGLE_API_KEY" in st.secrets:
     api_key = st.secrets["GOOGLE_API_KEY"]
 else:
-    api_key = st.sidebar.text_input("Masukkan Kode Password (API Key)", type="password")
+    api_key = st.sidebar.text_input("Masukkan API Key (Lokal)", type="password")
 
-# --- KONFIGURASI GENAI ---
 if api_key:
     genai.configure(api_key=api_key)
-else:
-    st.warning("Silakan masukkan API Key di sidebar untuk memulai.")
 
 # Form Input
 with st.form("news_form"):
-    judul = st.text_input("Judul Berita")
-    tempat = st.text_input("Tempat Kejadian")
-    waktu = st.text_input("Waktu Kejadian")
+    judul_awal = st.text_input("Judul Draft (Opsional)")
+    tempat = st.text_input("Tempat Kegiatan")
+    waktu = st.text_input("Waktu Kegiatan")
     narasumber = st.text_input("Narasumber")
     gaya = st.selectbox("Gaya Bahasa", ["Formal", "Santai", "Investigatif", "Sensasional"])
-    rincian = st.text_area("Rincian Kejadian")
+    rincian = st.text_area("Rincian Kegiatan (Data Utama)", height=150, help="Masukkan fakta-fakta kegiatan di sini.")
     kata_kunci = st.text_input("Kata Kunci (pisahkan dengan koma)")
-    submit = st.form_submit_button("Generate Berita")
+    submit = st.form_submit_button("Generate Berita Profesional")
 
 # Fungsi untuk membuat file Word
 def create_docx(text):
@@ -66,28 +54,38 @@ def create_docx(text):
     buffer.seek(0)
     return buffer
 
-# Proses Generate
 if submit:
     if not api_key:
-        st.error("API Key belum tersedia!")
+        st.error("API Key belum diisi!")
     else:
         try:
-            available_models = [m for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            if not available_models:
-                st.error("Tidak ditemukan model yang mendukung generateContent!")
-            else:
-                model_name = available_models[0].name
-                model = genai.GenerativeModel(model_name)
+            # --- FITUR 1: SARAN JUDUL ALTERNATIF ---
+            saran_prompt = f"Berikan 3 saran judul berita yang menarik, profesional, dan SEO-friendly berdasarkan detail kegiatan ini: {rincian}. Berikan hanya judulnya saja."
+            saran_response = model.generate_content(saran_prompt)
+            st.info(f"💡 **Saran Judul Alternatif:**\n{saran_response.text}")
+
+            # --- FITUR 2: GENERATE BERITA 5W+1H ---
+            prompt = f"""
+            Anda adalah jurnalis senior i-Humas PUI-PT DLI UM. Tulis berita profesional berdasarkan:
+            - Judul Draft: {judul_awal}
+            - Lokasi: {tempat}
+            - Waktu: {waktu}
+            - Narasumber: {narasumber}
+            - Rincian: {rincian}
+            - Gaya: {gaya}
+            
+            INSTRUKSI: Terapkan 5W+1H, struktur berita piramida terbalik, bahasa objektif, dan informatif.
+            """
+            
+            with st.spinner("Jurnalis AI sedang menulis berita..."):
+                response = model.generate_content(prompt)
+                berita_teks = response.text
+                st.markdown("### Hasil Berita Final:")
+                st.write(berita_teks)
                 
-                prompt = f"Anda adalah jurnalis. Tulis berita dengan judul: {judul}, Lokasi: {tempat}, Waktu: {waktu}, Narasumber: {narasumber}, Gaya: {gaya}. Detail: {rincian}. Kata Kunci: {kata_kunci}."
-                
-                with st.spinner("Sedang menyusun berita..."):
-                    response = model.generate_content(prompt)
-                    berita_teks = response.text
-                    st.write(berita_teks)
-                    
-                    doc_buffer = create_docx(berita_teks)
-                    st.download_button("📥 Download Berita (.docx)", doc_buffer, "berita.docx")
+                doc_buffer = create_docx(berita_teks)
+                st.download_button("📥 Download Berita (.docx)", doc_buffer, "berita_dli_um.docx")
         except Exception as e:
             st.error(f"Terjadi kesalahan: {e}")
