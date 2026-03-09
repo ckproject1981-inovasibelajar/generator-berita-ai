@@ -6,15 +6,30 @@ import io
 # Konfigurasi Halaman
 st.set_page_config(page_title="i-Humas DLI", layout="centered")
 
-# --- CSS AGRESIF UNTUK CLEAN LOOK ---
+# --- CSS AGRESIF UNTUK CLEAN LOOK & FOOTER KUSTOM ---
 hide_streamlit_style = """
     <style>
+    /* Sembunyikan elemen bawaan Streamlit */
     #MainMenu {visibility: hidden !important;}
     footer {visibility: hidden !important;}
     .stDeployButton {display:none !important;}
     header {visibility: hidden !important;}
     button[title="View fullscreen"] {visibility: hidden !important;}
     .stAppDeployButton {display:none !important;}
+    
+    /* Style untuk Footer Kustom */
+    .custom-footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+        background-color: #f8f9fa;
+        font-size: 12px;
+        color: #555;
+        border-top: 1px solid #ddd;
+    }
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
@@ -61,12 +76,12 @@ if submit:
         try:
             model = genai.GenerativeModel('gemini-1.5-flash')
             
-            # --- FITUR 1: SARAN JUDUL ALTERNATIF ---
+            # --- SARAN JUDUL ALTERNATIF ---
             saran_prompt = f"Berikan 3 saran judul berita yang menarik, profesional, dan SEO-friendly berdasarkan detail kegiatan ini: {rincian}. Berikan hanya judulnya saja."
             saran_response = model.generate_content(saran_prompt)
             st.info(f"💡 **Saran Judul Alternatif:**\n{saran_response.text}")
 
-            # --- FITUR 2: GENERATE BERITA 5W+1H ---
+            # --- GENERATE BERITA 5W+1H ---
             prompt = f"""
             Anda adalah jurnalis senior i-Humas PUI-PT DLI UM. Tulis berita profesional berdasarkan:
             - Judul Draft: {judul_awal}
@@ -89,3 +104,6 @@ if submit:
                 st.download_button("📥 Download Berita (.docx)", doc_buffer, "berita_dli_um.docx")
         except Exception as e:
             st.error(f"Terjadi kesalahan: {e}")
+
+# --- FOOTER KUSTOM ---
+st.markdown('<div class="custom-footer">Dikembangkan oleh Citra Kurniawan & PUI DLI - 2026</div>', unsafe_allow_html=True)
