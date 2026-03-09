@@ -9,7 +9,6 @@ st.set_page_config(page_title="i-Humas DLI", layout="centered")
 # --- CSS AGRESIF UNTUK CLEAN LOOK & FOOTER KUSTOM ---
 hide_streamlit_style = """
     <style>
-    /* Sembunyikan elemen bawaan Streamlit */
     #MainMenu {visibility: hidden !important;}
     footer {visibility: hidden !important;}
     .stDeployButton {display:none !important;}
@@ -17,7 +16,6 @@ hide_streamlit_style = """
     button[title="View fullscreen"] {visibility: hidden !important;}
     .stAppDeployButton {display:none !important;}
     
-    /* Style untuk Footer Kustom */
     .custom-footer {
         position: fixed;
         left: 0;
@@ -29,14 +27,20 @@ hide_streamlit_style = """
         font-size: 12px;
         color: #555;
         border-top: 1px solid #ddd;
+        z-index: 999;
     }
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# Judul dengan style
+# --- LOGO & JUDUL ---
+# Menampilkan logo dengan lebar 200px dan rata tengah
+col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
+with col_logo2:
+    st.image("https://i.ibb.co.com/23N3kpBY/Logo-DLI.png", width=200)
+
 st.markdown("""
-    <h2 style="font-size: 20px; text-align: center;">📰 i-Humas PUI-PT DLI UM Ver 1.0</h2>
+    <h2 style="font-size: 20px; text-align: center; margin-top: -10px;">📰 i-Humas PUI-PT DLI UM Ver 1.0</h2>
 """, unsafe_allow_html=True)
 
 # Logika API Key
