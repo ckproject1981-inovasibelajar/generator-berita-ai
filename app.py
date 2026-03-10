@@ -1,6 +1,5 @@
 import streamlit as st
 import google.generativeai as genai
-from docx import Document
 import io
 
 # Konfigurasi Halaman
@@ -62,15 +61,6 @@ with st.form("news_form"):
     kata_kunci = st.text_input("Kata Kunci (pisahkan dengan koma)")
     submit = st.form_submit_button("Generate Berita Profesional")
 
-def create_docx(text):
-    doc = Document()
-    doc.add_heading('Hasil Berita AI', 0)
-    doc.add_paragraph(text)
-    buffer = io.BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    return buffer
-
 if submit:
     if not api_key:
         st.error("API Key belum diisi!")
@@ -81,7 +71,6 @@ if submit:
             if not models:
                 st.error("Tidak ada model yang tersedia untuk generateContent.")
             else:
-                # Menggunakan model pertama yang tersedia di akun Anda
                 model = genai.GenerativeModel(models[0].name)
                 
                 # --- SARAN JUDUL ALTERNATIF ---
@@ -105,11 +94,10 @@ if submit:
                 with st.spinner("Jurnalis AI sedang menulis berita..."):
                     response = model.generate_content(prompt)
                     berita_teks = response.text
+                    st.markdown("---")
                     st.markdown("### Hasil Berita Final:")
                     st.write(berita_teks)
                     
-                    doc_buffer = create_docx(berita_teks)
-                    st.download_button("📥 Download Berita (.docx)", doc_buffer, "berita_dli_um.docx")
         except Exception as e:
             st.error(f"Terjadi kesalahan koneksi model: {e}")
 
