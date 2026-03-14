@@ -1,0 +1,21 @@
+name: Keep Streamlit Alive
+
+on:
+  schedule:
+    # Berjalan otomatis setiap 12 jam (pukul 00:00 dan 12:00 UTC)
+    - cron: '0 */12 * * *'
+  workflow_dispatch: # Agar Anda bisa menjalankan tombol "Run" secara manual
+
+jobs:
+  auto_commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create empty commit
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit --allow-empty -m "Keep-alive pulse to prevent Streamlit sleep"
+          git push
